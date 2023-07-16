@@ -1,0 +1,60 @@
+resource "aws_key_pair" "provisioner"{
+    key_name = "provisoner"
+    publlic_key = file("C:\\users\\WELCOME\\provisioner.pub")
+}
+
+resource "aws_security_group" "allowe_tls" {
+    name        = "allow-tls"
+    description = "Allow All ports"
+    vpc_id      = ""  #default vpc id
+
+    ingress {
+        description = "TLS for VPC"
+        from_port   = 0
+        to_port     = 65535
+        protocal    = "tcp"
+        cidr_block  = ["0.0.0.0/0"]
+    }
+
+    egress {
+        from_port       = 0
+        to_port         = 65535
+        protocal        = "tcp"
+        cidr_block      = ["0.0.0.0/0"]
+        ipv6_cidr_block = ["::/0"]
+    }
+    tags = {
+        Name = "Allow_tls"
+    }
+} 
+
+resource "aws_instance" "demo" {
+    ami = "ami-0b9ecf71fe947bbdd"
+    instance_type = "t3.micro"
+    key_name = aws_key_pair.provisioner.key_name
+    
+    provisioner "local-exec" {
+        command = "echo The server's IP address is ${self.public_ip} > public_ip.txt"
+    }
+}
+
+resource "aws_instance" "remote" {
+    ami = "ami-008b85aa3ff5c1b02"
+    instance_type   = "t3.micro"
+    key_name        = aws_key_pair.provisioner.key_name
+    security_groups = [aws_security_group.allow_tls.name]
+    
+    connect {
+        type        = "ssh"
+        user        = "ec2-user"
+        private_key = file("C:\\users\\WELCOME\\provisioner.pub")
+        host        = self.public.ip
+    }
+
+    provisioner "remote-exec" {
+        inline = [
+            "touch /tmp/remote.txt",
+            "echo 'this file is created by remote provisioner' > /tmp/remote.txt"
+        ]
+    }
+}

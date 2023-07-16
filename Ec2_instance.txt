@@ -1,0 +1,24 @@
+provider "aws" {
+    region = "ap-south-1"
+}
+resource "aws_instance" "Dev" {
+  ami = "ami-008b85aa3ff5c1b02"
+  instance_type = "t2.micro"
+  #key_name = "twstkey"
+  tags = {
+  Name = "terraform"
+ }
+}
+
+
+# provider "aws" {
+#     region = "ap-south-1"  #attribute
+# }
+# resource "aws_instance" "demo" {
+#   ami = "ami-008b85aa3ff5c1b02"
+#   instance_type = "t2.micro"
+#   key_name = "key"
+#   tags = {
+#   Name ="server-1"
+#  }
+# }
